@@ -6,7 +6,7 @@ redcap <- read_csv("data/raw/redcap_cleaned.csv")
 
 # Select just the demographic variables
 redcap_demo <- redcap %>%
-  select(record_id:sex_last_year)
+  select(record_id:ethnic)
 
 # CONTEXT -----------------------------------------------------------------
 
@@ -77,4 +77,20 @@ redcap_demo %>%
 
 # SEXUAL ORIENTATION ------------------------------------------------------
 
+# Sexual orientation
+redcap_demo %>%
+  count(sex_orient) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))
 
+# Sexual attraction
+redcap_demo %>%
+  count(sex_attrac) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))
+
+# Sex in the last year
+redcap_demo %>%
+  count(sex_last_year) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))

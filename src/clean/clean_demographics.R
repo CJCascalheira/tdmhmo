@@ -136,6 +136,55 @@ redcap_demo_3 <- no_cis %>%
   select(-gender_p)
 redcap_demo_3
 
+# Check for unique categories
+unique(redcap_demo_3$gender)
+
+# Recode the gender variables to reduce categories into report form
+redcap_demo_3 <- redcap_demo_3 %>%
+  mutate(
+    # Manual recoding due to specificity of identities
+    gender = recode(gender, "non_binary_trans_masc_trans_fem_unsure" = "non_binary",
+                    "non_binary_transgender_unsure" = "non_binary",
+                    "trans_man_non_binary_trans_masc_unsure" = "trans_masc",
+                    "trans_man_trans_woman_non_binary_trans_masc" = "non_binary",
+                    "trans_woman_non_binary_trans_fem_unsure" = "trans_fem",            
+                    "trans_man_non_binary" = "trans_masc",
+                    "trans_man_trans_woman_non_binary" = "non_binary",
+                    "trans_man_trans_woman" = "non_binary",
+                    "trans_woman_trans_masc_transgender" = "non_binary",
+                    "trans_woman_non_binary_trans_fem_transgender_unsure" = "trans_fem",
+                    "non_binary_trans_masc" = "trans_masc",                       
+                    "trans_man_trans_masc_transgender" = "trans_man",                  
+                    "trans_woman_non_binary_trans_fem" = "trans_fem",          
+                    "trans_woman_non_binary_trans_fem_transgender" = "trans_fem",          
+                    "trans_woman_trans_fem_transgender" = "trans_fem",
+                    "trans_man_trans_woman_non_binary_trans_masc_transgender" = "non_binary",
+                    "trans_man_non_binary_unsure" = "trans_masc",
+                    "trans_man_transgender" = "trans_man",      
+                    "non_binary_trans_masc_unsure" = "trans_masc",                     
+                    "trans_woman_transgender" = "trans_woman",             
+                    "non_binary_trans_masc_transgender_unsure" = "trans_masc",
+                    "non_binary_unsure" = "non_binary",
+                    "non_binary_trans_masc_transgender" = "trans_masc",                      
+                    "trans_man_non_binary_trans_masc" = "trans_masc",
+                    "trans_man_non_binary_trans_masc_transgender" = "trans_masc",         
+                    "trans_woman_trans_masc_trans_fem_transgender" = "non_binary",
+                    "trans_man_non_binary_trans_masc_transgender_unsure" = "trans_masc",
+                    "trans_woman_non_binary" = "trans_woman",
+                    "non_binary_trans_fem_transgender" = "trans_fem",              
+                    "trans_man_trans_masc" = "trans_man",          
+                    "trans_woman_non_binary_transgender" = "trans_fem",                    
+                    "trans_woman_non_binary_unsure" = "trans_fem",        
+                    "trans_man_non_binary_transgender" = "trans_masc",                
+                    "trans_man_non_binary_trans_fem" = "non_binary",         
+                    "non_binary_transgender" = "non_binary",           
+                    "trans_woman_trans_fem" = "trans_fem",                 
+                    "trans_man_non_binary_transgender_unsure" = "trans_masc",         
+                    "non_binary_trans_fem" = "trans_fem",  
+                    "trans_man_trans_woman_transgender" = "non_binary",                      
+                    "trans_man_trans_woman_trans_masc" = "non_binary")
+  )
+
 # RACE AND ETHNICITY ------------------------------------------------------
 
 # Select ethnicity variables
@@ -186,6 +235,16 @@ redcap_demo_4 %>%
 # Drop other ethnicity column
 redcap_demo_5 <- redcap_demo_4 %>%
   select(-eth_race_other)
+
+# Recode the ethnicity variables
+redcap_demo_5 <- redcap_demo_5 %>%
+  mutate(
+    ethnic = if_else(str_detect(ethnic_p, regex("_", ignore_case = TRUE)), "Multiethnic", ethnic_p),
+    ethnic = recode(ethnic, "Multiethnic / Multiracial" = "Multiethnic", "none" = "Other",
+                    "Biethnic / Biracial" = "Multiethnic")
+  ) %>%
+  # Drop the unused ethnicity variable
+  select(-ethnic_p)
 
 # SEXUAL ORIENTATION ------------------------------------------------------
 
