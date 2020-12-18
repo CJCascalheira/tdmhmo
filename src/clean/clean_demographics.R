@@ -189,4 +189,57 @@ redcap_demo_5 <- redcap_demo_4 %>%
 
 # SEXUAL ORIENTATION ------------------------------------------------------
 
-unique(redcap_demo_5$sex_orient_other)
+# Sexual orientation variables - recode
+redcap_demo_6 <- redcap_demo_5 %>%
+  mutate(
+    sex_orient = recode(sex_orient, `1` = "asexual", `2` = "bisexual", `3` = "gay", `4` = "heterosexual",
+                        `5` = "lesbian", `6` = "multiple orientations", `7` = "pansexual",
+                        `8` = "queer", `9` = "other"),
+    sex_attrac = recode(sex_attrac, `1` = "cisgender women", `2` = "cisgender men", `3` = "cisgender m&w",
+                        `4` = "all genders", `5` = "specific genders", `6` = "no sex attrac"),
+    sex_last_year = recode(sex_last_year, `1` = "cisgender women", `2` = "cisgender men", 
+                           `3` = "cisgender m&w", `4` = "all genders", `5` = "specific genders", 
+                           `6` = "no sex attrac")
+  )
+
+# What do people who write "other" mean?
+redcap_demo_6 %>%
+  filter(!is.na(sex_orient_other)) %>%
+  select(record_id, sex_orient, sex_orient_other)
+
+# Keep other category for now, drop column
+redcap_demo_7 <- redcap_demo_6 %>%
+  select(-sex_orient_other)
+
+# RECODE OTHER DEMOGRAPHICS -----------------------------------------------
+
+# Recode variables 
+redcap_demo_8 <- redcap_demo_7 %>%
+  mutate(
+    region = recode(region, `1` = "East Coast", `2` = "Midwest", `3` = "Rocky Mountains", `4` = "Southwest",
+                    `5` = "West Coast", `6` = "Southeast", `7` = "Alaska / Hawaii"),
+    income = recode(income, `1` = "less than $20,000", `2` = "$20,000 - $44,999", 
+                    `3` = "$45,000 - $139,999", `4` = "$140,000 - $149,999", `5` = "$150,000 - $199,999", 
+                    `6` = "more than $200,000"),
+    education = recode(education, `1` = "no high school", `2` = "some high school", 
+                       `3` = "high school diploma / GED", `4` = "some college", `5` = "associate degree", 
+                       `6` = "bachelors degree", `7` = "tradeperson certificate", 
+                       `8` = "some graduate school", `9` = "masters degree", 
+                       `10` = "doctoral / professional degree"),
+    hormone = recode(hormone, `1` = "currently taking", `2` = "took in the past but not currently", 
+                     `3` = "plan to take in the future", `4` = "unsure about the future", 
+                     `5` = "do not plan to take in the future"),
+    top_sex = recode(top_sex, `1` = "have had", `2` = "would like to in the future", 
+                     `3` = "unsure about the future", `4` = "do not plan to in the future"),
+    bottom_sex = recode(bottom_sex, `1` = "have had", `2` = "would like to in the future", 
+                        `3` = "unsure about the future", `4` = "do not plan to in the future")
+  )
+
+# COMBINE DEMO AND SCALES -------------------------------------------------
+
+# Combine the data frames
+redcap_2 <- redcap_demo_8 %>%
+  left_join(redcap_scales)
+
+# Write to a file
+write_csv(redcap_2, path = "data/raw/redcap_cleaned.csv")
