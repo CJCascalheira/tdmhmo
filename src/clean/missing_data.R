@@ -48,12 +48,29 @@ redcap_raw_4 <- redcap_raw_3 %>%
 # Total removed
 nrow(redcap_raw) - nrow(redcap_raw_4)
 
+# Check 1 - number
+redcap_raw_4 %>%
+  filter(check_1 != 1) %>%
+  nrow()
+
+# Check 1 - remove
+redcap_raw_5 <- redcap_raw_4 %>%
+  filter(check_1 ==1)
+
+# Check 2 - number
+redcap_raw_5 %>%
+  filter(check_2 != 1)
+
+# Check 2 - remove
+redcap_raw_6 <- redcap_raw_5 %>%
+  filter(check_2 == 1)
+
 # DROP COLUMNS AND EXPORT -------------------------------------------------
 
 # Drop unnecessary columns
-redcap_raw_5 <- redcap_raw_4 %>%
+redcap_raw_7 <- redcap_raw_6 %>%
   select(-c(redcap_survey_identifier, inside_out_the_transgender_mental_health_survey_timestamp,
-            consent, live_usa, complete))
+            consent, live_usa, complete, check_1, check_2))
 
 # Export
-write_csv(redcap_raw_5, path = "data/raw/redcap_complete.csv")
+write_csv(redcap_raw_7, path = "data/raw/redcap_complete.csv")
