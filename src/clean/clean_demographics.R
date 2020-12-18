@@ -241,7 +241,9 @@ redcap_demo_5 <- redcap_demo_5 %>%
   mutate(
     ethnic = if_else(str_detect(ethnic_p, regex("_", ignore_case = TRUE)), "Multiethnic", ethnic_p),
     ethnic = recode(ethnic, "Multiethnic / Multiracial" = "Multiethnic", "none" = "Other",
-                    "Biethnic / Biracial" = "Multiethnic")
+                    "Biethnic / Biracial" = "Multiethnic", "American Indian / Alaska Native" = "Other",
+                    "South Asian / Indian American" = "Other", 
+                    "Native Hawaiian / Pacific Islander" = "Other")
   ) %>%
   # Drop the unused ethnicity variable
   select(-ethnic_p)
@@ -251,8 +253,8 @@ redcap_demo_5 <- redcap_demo_5 %>%
 # Sexual orientation variables - recode
 redcap_demo_6 <- redcap_demo_5 %>%
   mutate(
-    sex_orient = recode(sex_orient, `1` = "asexual", `2` = "bisexual", `3` = "gay", `4` = "heterosexual",
-                        `5` = "lesbian", `6` = "multiple orientations", `7` = "pansexual",
+    sex_orient = recode(sex_orient, `1` = "asexual", `2` = "bi/pansexual", `3` = "gay", `4` = "heterosexual",
+                        `5` = "lesbian", `6` = "other", `7` = "bi/pansexual",
                         `8` = "queer", `9` = "other"),
     sex_attrac = recode(sex_attrac, `1` = "cisgender women", `2` = "cisgender men", `3` = "cisgender m&w",
                         `4` = "all genders", `5` = "specific genders", `6` = "no sex attrac"),
@@ -278,13 +280,13 @@ redcap_demo_8 <- redcap_demo_7 %>%
     region = recode(region, `1` = "East Coast", `2` = "Midwest", `3` = "Rocky Mountains", `4` = "Southwest",
                     `5` = "West Coast", `6` = "Southeast", `7` = "Alaska / Hawaii"),
     income = recode(income, `1` = "less than $20,000", `2` = "$20,000 - $44,999", 
-                    `3` = "$45,000 - $139,999", `4` = "$140,000 - $149,999", `5` = "$150,000 - $199,999", 
-                    `6` = "more than $200,000"),
-    education = recode(education, `1` = "no high school", `2` = "some high school", 
+                    `3` = "$45,000 - $139,999", `4` = "more than $140,000", `5` = "more than $140,000", 
+                    `6` = "more than $140,000"),
+    education = recode(education, `1` = "high school or less", `2` = "high school or less", 
                        `3` = "high school diploma / GED", `4` = "some college", `5` = "associate degree", 
                        `6` = "bachelors degree", `7` = "tradeperson certificate", 
-                       `8` = "some graduate school", `9` = "masters degree", 
-                       `10` = "doctoral / professional degree"),
+                       `8` = "graduate school", `9` = "graduate school", 
+                       `10` = "graduate school"),
     hormone = recode(hormone, `1` = "currently taking", `2` = "took in the past but not currently", 
                      `3` = "plan to take in the future", `4` = "unsure about the future", 
                      `5` = "do not plan to take in the future"),
