@@ -36,3 +36,45 @@ redcap_demo %>%
   count(education) %>%
   mutate(percent = n/nrow(redcap_demo)) %>%
   arrange(desc(n))
+
+# Ethnicity
+redcap_demo %>%
+  count(ethnic) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))
+
+# GENDER ------------------------------------------------------------------
+
+# Gender
+redcap_demo %>%
+  count(gender) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))
+
+# Sex Assigned at Birth
+redcap_demo %>%
+  count(saab) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))
+
+# Hormones
+redcap_demo %>%
+  count(hormone) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))
+
+# Top Surgery
+redcap_demo %>%
+  count(top_sex) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))
+
+# Bottom Surgery
+redcap_demo %>%
+  count(bottom_sex) %>%
+  mutate(percent = n/nrow(redcap_demo)) %>%
+  arrange(desc(n))
+
+# SEXUAL ORIENTATION ------------------------------------------------------
+
+
