@@ -175,6 +175,9 @@ totals_only <- scales_total %>%
 # Bivariate correlations
 rcorr(as.matrix(totals_only), type = "pearson")
 
+# Correlation visualization
+pairs.panels(as.matrix(totals_only))
+
 # Save correlation matrix
 cor_list <- rcorr(as.matrix(totals_only), type = "pearson") %>%
   as.list()
