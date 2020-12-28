@@ -13,6 +13,11 @@ redcap_scales <- redcap %>%
          starts_with("sobbs"), starts_with("tis"))
 redcap_scales
 
+# MEASUREMENT MODEL -------------------------------------------------------
+
+# Use CFA to determine if the LVs fit the data and to derive the 
+# correlations among LVs.
+
 # CONFIRMATORY FACTOR ANALYSIS --------------------------------------------
 
 # Vector of standard deviations
@@ -36,13 +41,21 @@ tdmhmo_cov
 
 # Latent variable model
 tdmhmo_model <- '
-  gims =~ a*gims_factor_1 + b*gims_factor_2 + c*gims_factor_3 + d*gims_factor_4 + e*gims_factor_5
-  isos =~ f*isos_factor_1 + g*isos_factor_2 + h*isos_factor_3
-  sobbs =~ i*sobbs_factor_1 + j*sobbs_factor_2
-  tis =~ k*tis_factor_1 + l*tis_factor_2 + m*tis_factor_3 + n*tis_factor_4
-  pfq2s =~ o*pfq2s_parcel_1 + p*pfq2s_parcel_2 + q*pfq2s_parcel_3
-  mhi =~ r*mhi_parcel_1 + s*mhi_parcel_2
+  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
+  sobbs =~ sobbs_factor_1 + sobbs_factor_2
+  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
+  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  dehum =~ gims + isos
 '
+
+#######
+# Note that, as of 12/28/2020, the cfa() function does the following automatically:
+# 1) The first observed indicator of each latent variable is set to 1.0 to scale the LVs
+# 2) Residuals variances are added
+# 3) LVs are correlated by default and covariances are added
+#######
 
 # Fit the data to the model using CFA
 tdmhmo_fit <- cfa(
@@ -53,7 +66,7 @@ tdmhmo_fit <- cfa(
   sample.nobs = 583,
   std.lv = FALSE,
   # Maximum likelihood estimation with robust standard errors
-  estimator = "MLR"
+  estimator = "MLM"
 )
 
 # Summarize the model
@@ -101,3 +114,42 @@ pt(lv_t_values$isos[6], df = 581, lower.tail = TRUE)
 
 # Therefore, since all values are significant at the p < .001 thus far and t = 2.2 is the lowest
 # t-value, all remaining intercorrelations among LVs are significant at the p < .001 level.
+
+# STRUCTURAL MODEL --------------------------------------------------------
+
+# Specify the SEM 
+tdmhmo_sem <- '
+# Define the measurement model
+  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
+  sobbs =~ sobbs_factor_1 + sobbs_factor_2
+  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
+  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  dehum =~ gims + isos
+# Define structural relationships
+# Direct effects
+  mhi ~ DM*dehum + SM*pfq2s + SOM*sobbs + ITM*tis
+  pfq2s ~ DS*dehum + SOS*sobbs + ITS*tis
+  sobbs ~ DSO*dehum
+  tis ~ DIT*dehum
+# Indirect effects
+  mhi_s := SM * DS
+  mhi_so := SOM * DSO
+  mhi_it := ITM * DIT
+  shame_so := SOS * DSO
+  shame_it := ITS * DIT
+# Total effect
+  total := DM + (SM * DS) + (SOM * DSO) + (ITM * DIT)
+'
+
+# Fit the model to the data
+tdmhmo_sem_fit <- sem(
+  model = tdmhmo_sem, 
+  data = redcap_scales,
+  # Maximum likelihood estimation with robust standard errors
+  estimator = "MLM"
+)
+
+# Summarize the model
+summary(tdmhmo_sem_fit, standardized = TRUE, fit.measures = TRUE)
