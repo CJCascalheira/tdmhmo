@@ -392,6 +392,121 @@ semPaths(
   layout = "tree2"
 )
 
+# STRUCTURAL MODEL 5 ------------------------------------------------------
+
+# First-order factors only, no shame mediation; allow to covary
+tdmhmo_sem_5 <- '
+# Define the measurement model
+
+# First-order factors
+  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
+  sobbs =~ sobbs_factor_1 + sobbs_factor_2
+  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
+  mhi =~ mhi_parcel_1 + mhi_parcel_2
+
+# Covariance among LVs
+  tis ~~ sobbs
+  gims ~~ isos
+  pfq2s ~~ tis + sobbs
+
+# Define structural relationships
+
+# Direct effects
+  mhi ~ GM*gims + ISM*isos + SM*pfq2s + SOM*sobbs + ITM*tis
+  pfq2s ~ GS*gims + ISS*isos
+  sobbs ~ ISSO*isos
+  tis ~ GIT*gims
+  
+# Indirect effects
+  mhi_s_is := ISS * SM
+  mhi_s_g := GS * SM 
+  mhi_so := ISSO * SOM
+  mhi_it := GIT * ITM
+  
+# Total effect
+  total := GM + ISM + (GS * SM) + (SM * GS) + (ISSO * SOM) + (GIT * ITM)
+'
+
+# Fit the model to the data - sem
+tdmhmo_sem_fit_5 <- sem(
+  model = tdmhmo_sem_5, 
+  data = redcap_scales,
+  # Maximum likelihood estimation with robust standard errors
+  estimator = "MLM"
+)
+
+# Summarize the model
+summary(tdmhmo_sem_fit_5, standardized = TRUE, fit.measures = TRUE)
+
+# Correlations among the LVs
+lavInspect(tdmhmo_sem_fit_5, what = "cor.lv")
+
+# Visualize the model
+semPaths(
+  object = tdmhmo_sem_fit_5,
+  layout = "tree2"
+)
+
+# STRUCTURAL MODEL 6 ------------------------------------------------------
+
+# Specify second-order SEM w/o shame mediation; instead, allow to covary
+tdmhmo_sem_6 <- '
+# Define the measurement model
+
+# First-order factors
+  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
+  sobbs =~ sobbs_factor_1 + sobbs_factor_2
+  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
+  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  
+# Second-order factor
+  dehum =~ gims + isos
+
+# Covariance among LVs
+  tis ~~ sobbs
+  pfq2s ~~ tis + sobbs
+
+# Define structural relationships
+
+# Direct effects
+  mhi ~ DM*dehum + SM*pfq2s + SOM*sobbs + ITM*tis
+  pfq2s ~ DS*dehum
+  sobbs ~ DSO*dehum
+  tis ~ DIT*dehum
+  
+# Indirect effects
+  mhi_s := DS * SM
+  mhi_so := DSO * SOM
+  mhi_it := DIT * ITM
+  
+# Total effect
+  total := DM + (DS * SM) + (DSO * SOM) + (DIT * ITM)
+'
+
+# Fit the model to the data
+tdmhmo_sem_fit_6 <- sem(
+  model = tdmhmo_sem_6, 
+  data = redcap_scales,
+  # Maximum likelihood estimation with robust standard errors
+  estimator = "MLM"
+)
+
+# Summarize the model
+summary(tdmhmo_sem_fit_6, standardized = TRUE, fit.measures = TRUE)
+
+# Correlations among the LVs
+lavInspect(tdmhmo_sem_fit_6, what = "cor.lv")
+
+# Visualize the SEM
+semPaths(
+  object = tdmhmo_sem_fit_6,
+  layout = "tree2"
+)
+
 ###########################################################################
 
 # Structural Model 1 - Heywood Case
@@ -405,3 +520,9 @@ tdmhmo_sem_fit_3
 
 # Structural Model 4 - Dehumanization Factor Retained
 tdmhmo_sem_fit_4
+
+# Structural Model 5 - First-Order Factors & Covary All Internalization Factors
+tdmhmo_sem_fit_5
+
+# Structural Model 6 - Second-Order Factor & Covary All Internalization Factors
+tdmhmo_sem_fit_6
