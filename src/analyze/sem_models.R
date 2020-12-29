@@ -1,8 +1,8 @@
 # Dependencies
 library(tidyverse)
 library(lavaan)
-library(lavaanPlot)
 library(semPlot)
+library(semTools)
 
 # Import data
 redcap <- read_csv("data/results/redcap_subscales.csv")
@@ -41,7 +41,7 @@ tdmhmo_cor_matrix
 tdmhmo_cov <- cor2cov(tdmhmo_cor_matrix, tdmhmo_sd_vector)
 tdmhmo_cov
 
-# Latent variable model
+# Latent variable model w/o second-order
 tdmhmo_model <- '
   gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
   isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
@@ -49,6 +49,18 @@ tdmhmo_model <- '
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
   mhi =~ mhi_parcel_1 + mhi_parcel_2
+'
+
+# Latent variable model w/ second-order
+tdmhmo_model_1 <- '
+  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
+  sobbs =~ sobbs_factor_1 + sobbs_factor_2
+  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
+  mhi =~ mhi_parcel_1 + mhi_parcel_2
+
+# Second-order factor
   dehum =~ gims + isos
 '
 
@@ -71,13 +83,32 @@ tdmhmo_fit <- cfa(
   estimator = "MLM"
 )
 
+# Second-order model fit
+tdmhmo_fit_1 <- cfa(
+  model = tdmhmo_model_1,
+  # Complete data necessary
+  data = redcap_scales,
+  sample.cov = tdmhmo_cov,
+  sample.nobs = 583,
+  std.lv = FALSE,
+  # Maximum likelihood estimation with robust standard errors
+  estimator = "MLM"
+)
+
+# Different between the two models?
+anova(tdmhmo_fit, tdmhmo_fit_1)
+compareFit(tdmhmo_fit, tdmhmo_fit_1)
+
 # Summarize the model
-summary(tdmhmo_fit, standardized = TRUE, fit.measures = TRUE)
+summary(tdmhmo_fit_1, standardized = TRUE, fit.measures = TRUE)
+
+# Visualize the measurement model
+semPaths(tdmhmo_fit_1)
 
 # SIGNIFICANT INTERCORRELATIONS AMONG LATENT VARIABLES --------------------
 
 # Correlations among the latent variables (LVs)
-lv_cor_matrix <- lavInspect(tdmhmo_fit, what = "cor.lv")
+lv_cor_matrix <- lavInspect(tdmhmo_fit_1, what = "cor.lv")
 lv_cor_matrix
 
 # Matrix to data fram
@@ -122,14 +153,18 @@ pt(lv_t_values$isos[6], df = 581, lower.tail = TRUE)
 # Specify the SEM
 tdmhmo_sem <- '
 # Define the measurement model
+
+# First-order factors
   gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
   isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
   mhi =~ mhi_parcel_1 + mhi_parcel_2
-  dehum =~ gims + isos
   
+# Second-order factor
+  dehum =~ gims + isos
+
 # Define structural relationships
 
 # Direct effects
@@ -161,12 +196,14 @@ tdmhmo_sem_fit <- sem(
 summary(tdmhmo_sem_fit, standardized = TRUE, fit.measures = TRUE)
 
 # Visualize the SEM
-lavaanPlot(model = tdmhmo_sem_fit, coefs = TRUE)
+semPaths(tdmhmo_sem_fit)
 
 # Correlations among the LVs
 lavInspect(tdmhmo_sem_fit, what = "cor.lv")
 
 # STRUCTURAL MODEL 2 - DIAGNOSE HEYWOOD CASE ------------------------------
+
+# Retain the second-order factor and respecify for the Heywood case
 
 # Locate the Heywood case
 summary(tdmhmo_sem_fit, standardized = TRUE, fit.measures = TRUE,
@@ -179,12 +216,16 @@ var(redcap_scales$tis_factor_4)
 # Update the model to correct for this variance
 tdmhmo_sem_2 <- '
 # Define the measurement model
+
+# First-order latent variables
   gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
   isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
   mhi =~ mhi_parcel_1 + mhi_parcel_2
+  
+# Second-order latent variable
   dehum =~ gims + isos
   
 # Define structural relationships
@@ -228,9 +269,7 @@ semPaths(
 )
 
 # Diagnose the model
-modificationindices(tdmhmo_sem_fit_2) %>%
-  as_data_frame() %>%
-  arrange(desc(mi))
+modificationindices(tdmhmo_sem_fit_2, sort. = TRUE)
 
 # Correlations among the LVs
 lavInspect(tdmhmo_sem_fit_2, what = "cor.lv")
@@ -241,3 +280,80 @@ lavInspect(tdmhmo_sem_fit_2, what = "cor.lv")
 # Adding more indirect pathways to this model did nothing to the model fit
 # Thus, it is evident that defined parameters do not contribute to model fit, at least
 # not the ones I measured in lavaan. Additionally, doing so violated tracing rules. 
+
+# STRUCTURAL MODEL 3 ------------------------------------------------------
+
+# Remove the second-order dehumanization factor
+# Comment out indirect effect to diagnose the Heywood case
+tdmhmo_sem_3 <- '
+# Define the measurement model
+
+# First-order factors
+  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
+  sobbs =~ sobbs_factor_1 + sobbs_factor_2
+  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
+  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  
+# Define structural relationships
+
+# Direct effects
+  mhi ~ GM*gims + ISM*isos + SM*pfq2s + SOM*sobbs + ITM*tis
+  pfq2s ~ GS*gims + ISS*isos + SOS*sobbs + ITS*tis
+  sobbs ~ ISSO*isos
+  tis ~ GIT*gims
+  
+# Indirect effects
+#  mhi_s := SM * DS
+#  mhi_so := SOM * DSO
+#  mhi_it := ITM * DIT
+#  shame_so := SOS * DSO
+#  shame_it := ITS * DIT
+  
+# Total effect
+#  total := DM + (SM * DS) + (SOM * DSO) + (ITM * DIT)
+'
+
+# Fit the model to the data - sem
+tdmhmo_sem_fit_3 <- sem(
+  model = tdmhmo_sem_3, 
+  data = redcap_scales,
+  # Maximum likelihood estimation with robust standard errors
+  estimator = "MLM"
+)
+
+# Summarize the model
+summary(tdmhmo_sem_fit_3, standardized = TRUE, fit.measures = TRUE)
+
+# Correlations among the LVs
+lavInspect(tdmhmo_sem_fit_3, what = "cor.lv")
+
+# Visualize the model
+semPaths(
+  object = tdmhmo_sem_fit_3,
+  layout = "tree2"
+)
+
+##################################################################################
+##################################################################################
+##################################################################################
+
+# Fit the model to the data - lavaan
+tdmhmo_sem_fit_3 <- lavaan(
+  model = tdmhmo_sem_3, 
+  data = redcap_scales,
+  # Maximum likelihood estimation with robust standard errors
+  estimator = "MLM",
+  # Mimic the call to sem()
+  int.ov.free = TRUE, 
+  int.lv.free = FALSE, 
+  auto.fix.first = TRUE, 
+  auto.fix.single = TRUE, 
+  auto.var = TRUE, 
+  auto.cov.lv.x = FALSE, 
+  auto.efa = TRUE,
+  auto.th = TRUE, 
+  auto.delta = TRUE, 
+  auto.cov.y = FALSE
+)

@@ -12,7 +12,7 @@ redcap_totals <- redcap %>%
   select(starts_with("total"))
 redcap_totals
 
-# MULTICOLLINEARITY (WESTON & GORE, 2006 ----------------------------------
+# MULTICOLLINEARITY (WESTON & GORE, 2006) ---------------------------------
 
 # Not an issue because intercorrelations are below .80
 pairs.panels(redcap_totals)
@@ -433,3 +433,22 @@ redcap_no_outliers
 
 # Save to file
 write_csv(redcap_no_outliers, "data/results/no_mv_outliers.csv")
+
+# MULTICOLLINEARITY - FACTORS AND PARCELS ----------------------------------
+
+# All assumptions can be passed to the factors and parcels except for 
+# multicollinearity and normality
+
+# Select just the factors and parcels
+parcel_factor <- redcap_1 %>%
+  select(contains(c("parcel", "factor")))
+parcel_factor
+
+# Check for multicollinearity
+cor(parcel_factor, method = "pearson") %>%
+  as.data.frame() %>%
+  rownames_to_column() %>%
+  as_tibble() %>%
+  gather(key = "factor_parcel", value = "correlation", -rowname) %>%
+  arrange(desc(correlation)) %>%
+  filter(correlation != 1)
