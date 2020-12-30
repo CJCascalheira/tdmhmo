@@ -368,12 +368,12 @@ pfq2s_parcel_3
 # Random combination of MHI numbers
 sample(1:5, replace = FALSE)
 
-# Parcel 1: 4, 2, 5
+# Parcel 1: 4, 2
 # Parcel 2: 3, 1
 
-# MHI - Parcel 1 - 4, 2, 5
+# MHI - Parcel 1 - 4, 2
 mhi_parcel_1 <- redcap %>%
-  select(record_id, mhi_4, mhi_2, mhi_5) %>%
+  select(record_id, mhi_4, mhi_2) %>%
   gather(key = "measure", value = "score", -record_id) %>%
   group_by(record_id) %>%
   summarize(

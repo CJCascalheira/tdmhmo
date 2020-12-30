@@ -9,7 +9,7 @@ redcap <- read_csv("data/results/redcap_subscales.csv")
 
 # Select just the parcels and subscales
 redcap_scales <- redcap %>%
-  select(contains("factor"), contains("parcel")) %>%
+  select(contains("factor"), contains("parcel"), mhi_5) %>%
   # Alphabetical variable order
   select(starts_with("gims"), starts_with("isos"), starts_with("mhi"), starts_with("pfq2s"),
          starts_with("sobbs"), starts_with("tis"))
@@ -48,7 +48,7 @@ tdmhmo_model <- '
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
 '
 
 # Latent variable model w/ second-order
@@ -58,7 +58,7 @@ tdmhmo_model_1 <- '
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
 
 # Second-order factor
   dehum =~ gims + isos
@@ -102,6 +102,21 @@ compareFit(tdmhmo_fit, tdmhmo_fit_1)
 # Summarize the model
 summary(tdmhmo_fit_1, standardized = TRUE, fit.measures = TRUE)
 
+# Check for identification per Kline (2015)
+tdmhmo_fit_2 <- cfa(
+  model = tdmhmo_model_1,
+  # Complete data necessary
+  data = redcap_scales,
+  sample.cov = fitted(tdmhmo_fit_1)$cov,
+  sample.nobs = 583,
+  std.lv = FALSE,
+  # Maximum likelihood estimation with robust standard errors
+  estimator = "MLM"
+)
+
+# Based on the estimation convergence, which is identical to tdmhmo_fit_1, the CFA is identified
+summary(tdmhmo_fit_2, standardized = TRUE, fit.measures = TRUE)
+
 # Visualize the measurement model
 semPaths(tdmhmo_fit_1)
 
@@ -117,36 +132,10 @@ lv_cor_df <- lv_cor_matrix %>%
   as_tibble()
 lv_cor_df
 
-# Calculate t-value cutoff for two-tailed significant correlation 
-t_cutoff <- qt(0.05/2, df = 581) %>%
-  # Take the absolute value
-  abs()
-t_cutoff 
-
-# Function to calculate critical t-value
-t_stat_cor <- function(r) {
-  (r * sqrt(583 - 2)) / (sqrt(1 - r^2))
-}
-
-# Calculate t-values for all correlations among LVs
-lv_t_values <- map_df(lv_cor_df, t_stat_cor)
-lv_t_values
-
-# Calculate p-values manually
-# GIMS
-pt(lv_t_values$gims[2], df = 581, lower.tail = FALSE)
-pt(lv_t_values$gims[3], df = 581, lower.tail = FALSE)
-pt(lv_t_values$gims[4], df = 581, lower.tail = FALSE)
-pt(lv_t_values$gims[5], df = 581, lower.tail = FALSE)
-pt(lv_t_values$gims[6], df = 581, lower.tail = TRUE)
-# ISOS
-pt(lv_t_values$isos[3], df = 581, lower.tail = FALSE)
-pt(lv_t_values$isos[4], df = 581, lower.tail = FALSE)
-pt(lv_t_values$isos[5], df = 581, lower.tail = FALSE)
-pt(lv_t_values$isos[6], df = 581, lower.tail = TRUE)
-
-# Therefore, since all values are significant at the p < .001 thus far and t = 2.2 is the lowest
-# t-value, all remaining intercorrelations among LVs are significant at the p < .001 level.
+# Significant correlations among LVs
+lavPredict(tdmhmo_fit_1) %>%
+  # Get correlation matrix with p-values
+  rcorr()
 
 # STRUCTURAL MODEL 1 ------------------------------------------------------
 
@@ -160,7 +149,7 @@ tdmhmo_sem <- '
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
   
 # Second-order factor
   dehum =~ gims + isos
@@ -221,7 +210,7 @@ tdmhmo_sem_2 <- '
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
   
 # Second-order latent variable
   dehum =~ gims + isos
@@ -291,7 +280,7 @@ tdmhmo_sem_3 <- '
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
 
 # Covariance among LVs
   tis ~~ sobbs
@@ -324,7 +313,7 @@ tdmhmo_sem_fit_3 <- sem(
 )
 
 # Summarize the model
-summary(tdmhmo_sem_fit_3, standardized = TRUE, fit.measures = TRUE)
+summary(tdmhmo_sem_fit_3, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
 
 # Correlations among the LVs
 lavInspect(tdmhmo_sem_fit_3, what = "cor.lv")
@@ -347,7 +336,7 @@ tdmhmo_sem_4 <- '
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
   
 # Second-order factor
   dehum =~ gims + isos
@@ -367,9 +356,15 @@ tdmhmo_sem_4 <- '
   mhi_s := DS * SM
   mhi_so := DSO * SOM
   mhi_it := DIT * ITM
+  mhi_sos := SOS * SM
+  mhi_its := ITS * SM
   
 # Total effect
   total := DM + (DS * SM) + (DSO * SOM) + (DIT * ITM)
+  total_shame := DM + (DS * SM)
+  total_selfobj := DM + (DSO * SOM)
+  total_inttrans := DM + (DIT * ITM)
+  total_shame2 := DM + (DS * SM) + SOM + (SOS * SM) + ITM + (ITS * SM)
 '
 
 # Fit the model to the data
@@ -381,7 +376,14 @@ tdmhmo_sem_fit_4 <- sem(
 )
 
 # Summarize the model
-summary(tdmhmo_sem_fit_4, standardized = TRUE, fit.measures = TRUE)
+summary(tdmhmo_sem_fit_4, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
+
+# Get standardized solution for reporting
+tdmhmo_std_solution_4 <- standardizedSolution(tdmhmo_sem_fit_4, type = "std.all", se = TRUE) %>%
+  as_tibble() %>%
+  # Select only direct and indirect effects
+  filter(op %in% c("~", ":="))
+tdmhmo_std_solution_4
 
 # Correlations among the LVs
 lavInspect(tdmhmo_sem_fit_4, what = "cor.lv")
@@ -404,7 +406,7 @@ tdmhmo_sem_5 <- '
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
 
 # Covariance among LVs
   tis ~~ sobbs
@@ -438,7 +440,7 @@ tdmhmo_sem_fit_5 <- sem(
 )
 
 # Summarize the model
-summary(tdmhmo_sem_fit_5, standardized = TRUE, fit.measures = TRUE)
+summary(tdmhmo_sem_fit_5, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
 
 # Correlations among the LVs
 lavInspect(tdmhmo_sem_fit_5, what = "cor.lv")
@@ -461,7 +463,7 @@ tdmhmo_sem_6 <- '
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
   tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
   
 # Second-order factor
   dehum =~ gims + isos
@@ -496,7 +498,7 @@ tdmhmo_sem_fit_6 <- sem(
 )
 
 # Summarize the model
-summary(tdmhmo_sem_fit_6, standardized = TRUE, fit.measures = TRUE)
+summary(tdmhmo_sem_fit_6, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
 
 # Correlations among the LVs
 lavInspect(tdmhmo_sem_fit_6, what = "cor.lv")
