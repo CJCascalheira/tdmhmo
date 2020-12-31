@@ -285,7 +285,7 @@ tdmhmo_sem_1 <- '
 # Covariance among LVs
   tis ~~ sobbs
 
-# Residual correlations
+# Residual correlations - works, but not identified per Kline (2015)
   tis_factor_4 ~~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
 
 # Define structural relationships

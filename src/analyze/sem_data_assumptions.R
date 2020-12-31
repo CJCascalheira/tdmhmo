@@ -452,3 +452,8 @@ cor(parcel_factor, method = "pearson") %>%
   gather(key = "factor_parcel", value = "correlation", -rowname) %>%
   arrange(desc(correlation)) %>%
   filter(correlation != 1)
+
+# EXPLORE TIS_FACTOR_4 ----------------------------------------------------
+
+# Histogram
+hist(redcap_1$tis_factor_4)
