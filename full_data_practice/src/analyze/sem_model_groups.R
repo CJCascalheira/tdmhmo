@@ -6,15 +6,24 @@ library(semPlot)
 library(semTools)
 
 # Import data
-redcap <- read_csv("data/results/redcap_subscales.csv")
-
+redcap <- read_csv("full_data_practice/data/results/redcap_subscales.csv")
+cleaned <- read_csv("full_data_practice/data/raw/redcap_cleaned_group.csv")
+  
 # Select just the parcels and subscales
-redcap_scales <- redcap %>%
-  select(contains("factor"), contains("parcel"), mhi_5) %>%
+redcap_scales_0 <- redcap %>%
+  select(record_id, contains("factor"), contains("parcel"), mhi_5) %>%
   # Alphabetical variable order
-  select(starts_with("gims"), starts_with("isos"), starts_with("mhi"), starts_with("pfq2s"),
+  select(record_id, starts_with("gims"), starts_with("isos"), starts_with("mhi"), starts_with("pfq2s"),
          starts_with("sobbs"), starts_with("tis"))
-redcap_scales
+redcap_scales_0
+
+# Combine data frame with group names
+redcap_scales <- cleaned %>%
+  select(record_id, group_name) %>%
+  left_join(redcap_scales_0) %>%
+  # Drop record ID
+  select(-record_id)
+redcap_scales 
 
 # MEASUREMENT MODEL -------------------------------------------------------
 
@@ -37,28 +46,11 @@ tdmhmo_cfa <- '
   dehum ~~ 1*dehum
 '
 
-# No higher-order factor
-tdmhmo_cfa_1 <- '
-# Define the measurement model
-  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
-  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
-  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
-  sobbs =~ sobbs_factor_1 + sobbs_factor_2
-  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-'
+# Fit the CFA
+tdmhmo_cfa_fit <- cfa(tdmhmo_cfa, data = redcap_scales, estimator = "MLM", group = "group_name")
 
-# Fit the CFA - higher order
-tdmhmo_cfa_fit <- cfa(tdmhmo_cfa, data = redcap_scales, estimator = "MLM")
-
-# Summarize the CFA - higher order
+# Summarize the CFA
 summary(tdmhmo_cfa_fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
-
-# Fit the CFA - first-order factors only model
-tdmhmo_cfa_fit_1 <- cfa(tdmhmo_cfa_1, data = redcap_scales, estimator = "MLM")
-
-# Different between the two models?
-anova(tdmhmo_cfa_fit, tdmhmo_cfa_fit_1)
 
 # Visualize the CFA
 semPaths(
@@ -103,7 +95,8 @@ tdmhmo_sem_fit <- sem(
   model = tdmhmo_sem, 
   data = redcap_scales,
   # Maximum likelihood estimation with robust standard errors
-  estimator = "MLM"
+  estimator = "MLM",
+  group = "group_name"
 )
 
 # Summarize the SEM

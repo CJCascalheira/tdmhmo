@@ -103,12 +103,12 @@ mvn(data = redcap_totals, mvnTest = "hz", desc = FALSE, univariateTest = "AD",
     multivariatePlot = "qq", multivariateOutlierMethod = "quan", showOutliers = TRUE)
 
 # Identify the record IDs for the multivariate outliers
-outlier(redcap_totals, bad = 20)
+outlier(redcap_totals, bad = 10)
 
 # Set the Mahalanobis distance for all cases
 md <- mahalanobis(redcap_totals, center = colMeans(redcap_totals), cov = cov(redcap_totals))
 
-# Quantile cutoff value, rounded down to pull most extreme 20 multivariate outliers
+# Quantile cutoff value, rounded down to pull most extreme 10 multivariate outliers
 # Quantile cutoff estimate taken from HZ function call
 cutoff <- 13.95
 
@@ -116,7 +116,7 @@ cutoff <- 13.95
 names_outliers_md <- which(md > cutoff)
 names_outliers_md
 
-# 20 multivariate outliers identified?
+# 10 multivariate outliers identified?
 length(names_outliers_md)
 
 # Check outlier identification; Mahalanobis distances slightly different from the mvn call

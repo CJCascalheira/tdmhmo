@@ -304,3 +304,19 @@ redcap_2 <- redcap_demo_8 %>%
 
 # Write to a file
 write_csv(redcap_2, path = "full_data_practice/data/raw/redcap_cleaned.csv")
+
+# Set groups
+redcap_3 <- redcap_2 %>%
+  mutate(group_name = rep("non_binary", nrow(redcap_2))) %>%
+  mutate(
+    group_name = if_else(str_detect(gender, regex("trans_man|trans_woman", ignore_case = TRUE)), 
+                         "transgender", group_name)
+  )
+redcap_3
+
+# Check coding
+table(redcap_3$group_name)
+
+# Write to file
+write_csv(redcap_3, path = "full_data_practice/data/raw/redcap_cleaned_group.csv")
+

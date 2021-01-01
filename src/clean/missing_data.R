@@ -4,6 +4,23 @@ library(tidyverse)
 # Import
 redcap_raw <- read_csv("data/raw/redcap_raw.csv")
 
+# Double entries based on emails being entered twice
+# Calculated from an R script not included in publicly available code
+double_entries <- read_csv("data/results/double_entries.csv")
+
+# Same person given by Record IDs
+# - Person 1 = 150, 905
+# - Person 2 = 162, 644
+# - Person 3 = 223, 799
+
+# Therefore, keep only the first entry
+
+# Just the record ids (to be removed) as a vector
+doubles <- double_entries %>%
+  filter(record_id %in% c(905, 644, 799)) %>%
+  pull()
+doubles
+
 # BASIC COUNT DATA FOR PARTICIPANT SECTION --------------------------------
 
 # Total responses
@@ -79,5 +96,14 @@ redcap_raw_7 <- redcap_raw_6 %>%
   select(-c(redcap_survey_identifier, inside_out_the_transgender_mental_health_survey_timestamp,
             consent, live_usa, complete, check_1, check_2))
 
+# Number of double entries to be reoved
+redcap_raw_7 %>%
+  filter(record_id %in% doubles) %>%
+  nrow()
+
+# Filter out the double entries
+redcap_raw_8 <- redcap_raw_7 %>%
+  filter(!(record_id %in% doubles))
+
 # Export
-write_csv(redcap_raw_7, path = "data/raw/redcap_complete.csv")
+write_csv(redcap_raw_8, path = "data/raw/redcap_complete.csv")

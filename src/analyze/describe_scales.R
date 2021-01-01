@@ -153,7 +153,7 @@ mhi
 
 # Bind columns
 scales_total <- redcap_scales %>%
-  bind_cols(isos, tis, sobbs, gims, pfq2s, mhi)
+  bind_cols(isos, gims, sobbs, tis, pfq2s, mhi)
 scales_total
 
 # Mean, SD, range
@@ -187,6 +187,7 @@ cor_table <- cor_list$r %>%
   as.data.frame() %>%
   rownames_to_column() %>%
   as_tibble()
+cor_table
 
 # EXPORT SCALES -----------------------------------------------------------
 

@@ -184,6 +184,7 @@ redcap_demo_3 <- redcap_demo_3 %>%
                     "trans_man_trans_woman_transgender" = "non_binary",                      
                     "trans_man_trans_woman_trans_masc" = "non_binary")
   )
+redcap_demo_3
 
 # RACE AND ETHNICITY ------------------------------------------------------
 
@@ -303,4 +304,12 @@ redcap_2 <- redcap_demo_8 %>%
   left_join(redcap_scales)
 
 # Write to a file
-write_csv(redcap_2, path = "data/raw/redcap_cleaned.csv")
+write_csv(redcap_2, path = "data/raw/redcap_cleaned_full.csv")
+
+# Set groups
+redcap_3 <- redcap_2 %>%
+  filter(gender %in% c("trans_man", "trans_woman"))
+redcap_3
+
+# Write to file
+write_csv(redcap_3, path = "data/raw/redcap_cleaned.csv")
