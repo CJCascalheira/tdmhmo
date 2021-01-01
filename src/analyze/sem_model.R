@@ -73,13 +73,13 @@ tdmhmo_sem <- '
 # Define the measurement model
 
 # First-order factors
-  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
   isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
-  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
+  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
   pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-
+  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
+  
 # Second-order factor
   dehum =~ NA*gims + isos
 
@@ -96,6 +96,18 @@ tdmhmo_sem <- '
   tis ~ DIT*dehum
   sobbs ~ DSO*dehum
   pfq2s ~ DS*dehum + ITS*tis + SOS*sobbs
+
+# Indirect effects
+  d_it_mh := DIT * ITM
+  d_so_mh := DSO * SOM
+  d_s_mh := DS * SM
+  it_s_mh := ITS * SM
+  so_s_mh := SOS * SM
+  
+# Total effects
+  total_dehum := DM + (DIT * ITM) + (DSO * SOM) + (DS * SM)
+  total_int_tran := ITM + (ITS * SM)
+  total_self_obj := SOM + (SOS * SM)
 '
 
 # Fit the model to the data
@@ -111,6 +123,12 @@ summary(tdmhmo_sem_fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE
 
 # Correlations among the LVs
 lavInspect(tdmhmo_sem_fit, what = "cor.lv")
+
+# Significant correlations among LVs
+# Correlations among LVs different from lavInspect due to estimation versus converged solution
+lavPredict(tdmhmo_sem_fit) %>%
+  # Get correlation matrix with p-values
+  rcorr()
 
 # Visualize the SEM
 semPaths(
