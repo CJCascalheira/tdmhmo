@@ -6,7 +6,7 @@ library(semPlot)
 library(semTools)
 
 # Import data
-redcap <- read_csv("data/results/redcap_subscales.csv")
+redcap <- read_csv("full_data_practice/data/results/redcap_subscales.csv")
 
 # Select just the parcels and subscales
 redcap_scales <- redcap %>%
@@ -214,7 +214,7 @@ semPaths(
 )
 
 # Export standardized solution for easy reporting
-write_csv(tdmhmo_std_solution, "data/results/standardized_solution.csv")
+write_csv(tdmhmo_std_solution, "full_data_practice/data/results/standardized_solution.csv")
 
 # Significant correlations among LVs
 lavPredict(tdmhmo_sem_fit) %>%
@@ -344,4 +344,4 @@ semPaths(
 )
 
 # Export standardized solution for easy reporting
-write_csv(tdmhmo_std_solution_1, "data/results/standardized_solution.csv")
+write_csv(tdmhmo_std_solution_1, "full_data_practice/data/results/standardized_solution.csv")

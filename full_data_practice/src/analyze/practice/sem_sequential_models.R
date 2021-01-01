@@ -6,7 +6,7 @@ library(semPlot)
 library(semTools)
 
 # Import data
-redcap <- read_csv("data/results/redcap_subscales.csv")
+redcap <- read_csv("full_data_practice/data/results/redcap_subscales.csv")
 
 # Select just the parcels and subscales
 redcap_scales <- redcap %>%
