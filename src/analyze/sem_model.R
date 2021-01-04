@@ -105,9 +105,12 @@ tdmhmo_sem <- '
   so_s_mh := SOS * SM
   
 # Total effects
-  total_dehum := DM + (DIT * ITM) + (DSO * SOM) + (DS * SM)
-  total_int_tran := ITM + (ITS * SM)
-  total_self_obj := SOM + (SOS * SM)
+total_int_tran := ITM + (ITS * SM)
+
+# Estimating these total effects does not make sense
+# given the nonsignificant direct paths
+#  total_dehum := DM + (DIT * ITM) + (DSO * SOM) + (DS * SM)
+#  total_self_obj := SOM + (SOS * SM)
 '
 
 # Fit the model to the data
@@ -133,5 +136,27 @@ lavPredict(tdmhmo_sem_fit) %>%
 # Visualize the SEM
 semPaths(
   object = tdmhmo_sem_fit,
-  layout = "spring"
+  layout = "tree2"
 )
+
+# Get standardized solution for standard error reporting
+tdmhmo_sem_report <- standardizedsolution(tdmhmo_sem_fit) %>%
+  as_tibble() %>%
+  filter(op == "~" | op == ":=" | (lhs == "dehum" & op == "=~")) %>%
+  # Round out p-values for interpretation
+  mutate(pvalue = round(pvalue, 3))
+tdmhmo_sem_report
+
+# Write to file for easy reporting
+write_csv(tdmhmo_sem_report, "data/results/tdmhmo_sem_report.csv")
+
+# Standard error for covariance (psi) of tis and sobbs
+standardizedsolution(tdmhmo_sem_fit) %>%
+  as_tibble() %>%
+  filter(lhs == "sobbs" & op == "~~")
+
+# SEs and 95% CI for standardized coefficient of indirect relations
+standardizedsolution(tdmhmo_sem_fit) %>%
+  as_tibble() %>%
+  filter(op == ":=") %>%
+  mutate(pvalue = round(pvalue, 3))
