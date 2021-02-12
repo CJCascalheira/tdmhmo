@@ -136,7 +136,7 @@ lavPredict(tdmhmo_sem_fit) %>%
 # Visualize the SEM
 semPaths(
   object = tdmhmo_sem_fit,
-  layout = "tree2"
+  layout = "spring"
 )
 
 # Get standardized solution for standard error reporting

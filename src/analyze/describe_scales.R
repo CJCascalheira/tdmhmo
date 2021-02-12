@@ -53,6 +53,22 @@ redcap_scales %>%
 
 # INTERNAL CONSISTENCY ----------------------------------------------------
 
+# Kuder-Richardson formula 20
+# https://rstudio-pubs-static.s3.amazonaws.com/141954_4774223853064561a65bf2f9dc2256ae.html#1113_kuder-richardson_formula_21_(kr21)
+KR20 <-
+  function(X){
+    X <- data.matrix(X)
+    k <- ncol(X)
+    
+    # Person total score variances
+    SX <- var(rowSums(X))
+    
+    # item means
+    IM <- colMeans(X)
+    
+    return(((k/(k - 1))*((SX - sum(IM*(1 - IM)))/SX)))
+  }
+
 # Interpersonal Sexual Objectification Scale 
 redcap_scales %>% 
   select(starts_with("isos")) %>%
@@ -61,7 +77,7 @@ redcap_scales %>%
 # Gender Identity Microaggressions Scale
 redcap_scales %>%
   select(starts_with("gims")) %>%
-  alpha()
+  KR20()
 
 # Self-Objectification Beliefs and Behaviors Scale 
 redcap_scales %>%

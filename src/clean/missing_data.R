@@ -96,7 +96,7 @@ redcap_raw_7 <- redcap_raw_6 %>%
   select(-c(redcap_survey_identifier, inside_out_the_transgender_mental_health_survey_timestamp,
             consent, live_usa, complete, check_1, check_2))
 
-# Number of double entries to be reoved
+# Number of double entries to be removed
 redcap_raw_7 %>%
   filter(record_id %in% doubles) %>%
   nrow()
