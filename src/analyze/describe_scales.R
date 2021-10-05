@@ -3,6 +3,7 @@ library(Hmisc)
 library(tidyverse)
 library(RBtest)
 library(psych)
+library(naniar)
 
 # Import
 redcap <- read_csv("data/raw/redcap_cleaned.csv")
@@ -36,6 +37,11 @@ redcap_scales %>%
 redcap_scales %>%
   select(-record_id) %>%
   RBtest()
+
+# Another MCAR test
+redcap_scales %>%
+  select(-record_id) %>%
+  mcar_test()
 
 # Replace missing values
 for (i in 2:length(redcap_scales)) {

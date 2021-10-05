@@ -19,11 +19,13 @@ emails_1 <- emails %>%
 
 # Filter the emails
 emails_2 <- semi_join(emails_1, complete_data, by = "record_id") %>%
+  # Remove missing values
+  filter(!is.na(email)) %>%
   # Add new column to select winners
-  mutate(win_id = 1:583)
+  mutate(win_id = 1:487)
 
 # Generate 60 random numbers
-winners <- sample(1:583, 60, replace = FALSE)
+winners <- sample(1:487, 60, replace = FALSE)
 
 # Filter for the winners
 win_emails <- emails_2 %>%

@@ -7,6 +7,7 @@ library(semTools)
 
 # Import data
 redcap <- read_csv("data/results/redcap_subscales.csv")
+redcap_cfa_results <- read_csv("data/results/redcap_cfa_results.csv")
 
 # Select just the parcels and subscales
 redcap_scales <- redcap %>%
@@ -20,42 +21,94 @@ redcap_scales
 
 # Specify CFA using CFA Model 4.1 (i.e., standard CFA)
 tdmhmo_cfa <- '
-# Define the measurement model
+# DEFINE THE MEASUREMENT MODEL
 
 # First-order factors
   gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
-  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
-  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3 + isos_factor_4
+  
+  mhi =~ mhi_1 + mhi_2 + mhi_3 + mhi_4 + mhi_5
+  
+  tis =~ tis_factor_1 + tis_6 + tis_25 + tis_1 + tis_12 + tis_factor_2 + 
+  tis_factor_3 + tis_factor_4 + tis_8 + tis_14
+  
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
-  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
+  
+  pfq2s =~ pfq2s_1 + pfq2s_2 + pfq2s_3 + pfq2s_4 + pfq2s_5 + pfq2s_6 + 
+  pfq2s_7 + pfq2s_8 + pfq2s_9 + pfq2s_10
 
 # Second-order factor
   dehum =~ NA*gims + isos
 
 # Unit variance identification constraint (Kline, 2015, p. 199)
   dehum ~~ 1*dehum
+
+# Allow residual variances to covary
+# Covariance between the error variances (Byrne, 2016, p. 104)
+  tis_6 ~~ tis_25
+  tis_1 ~~ tis_12
+  tis_8 ~~ tis_14
+  mhi_2 ~~ mhi_3
+  
+  tis_factor_1 ~~ tis_6
+  tis_factor_1 ~~ tis_25
+  tis_factor_1 ~~ tis_1
+  tis_factor_1 ~~ tis_12
+  tis_factor_4 ~~ tis_8
+  tis_factor_4 ~~ tis_14
+  
+  pfq2s_7 ~~ pfq2s_10
+  pfq2s_8 ~~ pfq2s_9
+  gims_factor_3 ~~ gims_factor_5
 '
 
 # No higher-order factor
 tdmhmo_cfa_1 <- '
-# Define the measurement model
+# DEFINE THE MEASUREMENT MODEL
+
+# First-order factors
   gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
-  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
-  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
+  
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3 + isos_factor_4
+  
+  mhi =~ mhi_1 + mhi_2 + mhi_3 + mhi_4 + mhi_5
+  
+  tis =~ tis_factor_1 + tis_6 + tis_25 + tis_1 + tis_12 + tis_factor_2 + 
+  tis_factor_3 + tis_factor_4 + tis_8 + tis_14
+  
   sobbs =~ sobbs_factor_1 + sobbs_factor_2
-  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
+  
+  pfq2s =~ pfq2s_1 + pfq2s_2 + pfq2s_3 + pfq2s_4 + pfq2s_5 + pfq2s_6 + 
+  pfq2s_7 + pfq2s_8 + pfq2s_9 + pfq2s_10
+
+# Allow residual variances to covary
+# Covariance between the error variances (Byrne, 2016, p. 104)
+  tis_6 ~~ tis_25
+  tis_1 ~~ tis_12
+  tis_8 ~~ tis_14
+  mhi_2 ~~ mhi_3
+  
+  tis_factor_1 ~~ tis_6
+  tis_factor_1 ~~ tis_25
+  tis_factor_1 ~~ tis_1
+  tis_factor_1 ~~ tis_12
+  tis_factor_4 ~~ tis_8
+  tis_factor_4 ~~ tis_14
+  
+  pfq2s_7 ~~ pfq2s_10
+  pfq2s_8 ~~ pfq2s_9
+  gims_factor_3 ~~ gims_factor_5
 '
 
 # Fit the CFA - higher order
-tdmhmo_cfa_fit <- cfa(tdmhmo_cfa, data = redcap_scales, estimator = "MLM")
+tdmhmo_cfa_fit <- cfa(tdmhmo_cfa, data = redcap_cfa_results, estimator = "MLM")
 
 # Summarize the CFA - higher order
 summary(tdmhmo_cfa_fit, standardized = TRUE, fit.measures = TRUE, rsquare = TRUE)
 
 # Fit the CFA - first-order factors only model
-tdmhmo_cfa_fit_1 <- cfa(tdmhmo_cfa_1, data = redcap_scales, estimator = "MLM")
+tdmhmo_cfa_fit_1 <- cfa(tdmhmo_cfa_1, data = redcap_cfa_results, estimator = "MLM")
 
 # Different between the two models?
 anova(tdmhmo_cfa_fit, tdmhmo_cfa_fit_1)
@@ -70,26 +123,51 @@ semPaths(
 
 # Specify the SEM using SEM Model 4.4
 tdmhmo_sem <- '
-# Define the measurement model
+# DEFINE THE MEASUREMENT MODEL
 
 # First-order factors
-  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3
   gims =~ gims_factor_1 + gims_factor_2 + gims_factor_3 + gims_factor_4 + gims_factor_5
-  sobbs =~ sobbs_factor_1 + sobbs_factor_2
-  tis =~ tis_factor_1 + tis_factor_2 + tis_factor_3 + tis_factor_4
-  pfq2s =~ pfq2s_parcel_1 + pfq2s_parcel_2 + pfq2s_parcel_3
-  mhi =~ mhi_parcel_1 + mhi_parcel_2 + mhi_5
   
+  isos =~ isos_factor_1 + isos_factor_2 + isos_factor_3 + isos_factor_4
+  
+  mhi =~ mhi_1 + mhi_2 + mhi_3 + mhi_4 + mhi_5
+  
+  tis =~ tis_factor_1 + tis_6 + tis_25 + tis_1 + tis_12 + tis_factor_2 + 
+  tis_factor_3 + tis_factor_4 + tis_8 + tis_14
+  
+  sobbs =~ sobbs_factor_1 + sobbs_factor_2
+  
+  pfq2s =~ pfq2s_1 + pfq2s_2 + pfq2s_3 + pfq2s_4 + pfq2s_5 + pfq2s_6 + 
+  pfq2s_7 + pfq2s_8 + pfq2s_9 + pfq2s_10
+
 # Second-order factor
   dehum =~ NA*gims + isos
 
 # Unit variance identification constraint (Kline, 2015, p. 199)
   dehum ~~ 1*dehum
 
+# Allow residual variances to covary
+# Covariance between the error variances (Byrne, 2016, p. 104)
+  tis_6 ~~ tis_25
+  tis_1 ~~ tis_12
+  tis_8 ~~ tis_14
+  mhi_2 ~~ mhi_3
+  
+  tis_factor_1 ~~ tis_6
+  tis_factor_1 ~~ tis_25
+  tis_factor_1 ~~ tis_1
+  tis_factor_1 ~~ tis_12
+  tis_factor_4 ~~ tis_8
+  tis_factor_4 ~~ tis_14
+  
+  pfq2s_7 ~~ pfq2s_10
+  pfq2s_8 ~~ pfq2s_9
+  gims_factor_3 ~~ gims_factor_5
+
 # Covariance between internalization LVs
   tis ~~ sobbs
 
-# Define structural relationships
+# DEFINE STRUCTURAL MODEL
 
 # Direct effects
   mhi ~ DM*dehum + ITM*tis + SOM*sobbs + SM*pfq2s
@@ -116,7 +194,7 @@ total_int_tran := ITM + (ITS * SM)
 # Fit the model to the data
 tdmhmo_sem_fit <- sem(
   model = tdmhmo_sem, 
-  data = redcap_scales,
+  data = redcap_cfa_results,
   # Maximum likelihood estimation with robust standard errors
   estimator = "MLM"
 )
@@ -160,3 +238,8 @@ standardizedsolution(tdmhmo_sem_fit) %>%
   as_tibble() %>%
   filter(op == ":=") %>%
   mutate(pvalue = round(pvalue, 3))
+
+
+#* ALT: BI-FACTOR MODEL ---------------------------------------------------
+
+# https://pages.mtu.edu/~shanem/psy5220/daily/Day22/cfa.html#the-bifactor-model
